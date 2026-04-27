@@ -1,0 +1,2364 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080b12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Morgen">
+  <link id="manifest-link" rel="manifest">
+  <title>Morgen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080b12;
+      --tile-bg: #0d1119;
+      --tile-border: #1e2535;
+      --tile-border-hover: #2d3a50;
+      --text-primary: #dde1eb;
+      --text-secondary: #6b7590;
+      --text-muted: #38415a;
+      --accent-amber: #f5a623;
+      --accent-blue: #5b9cf6;
+      --accent-green: #3dd68c;
+      --accent-red: #f55f4b;
+      --accent-purple: #b47cf6;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Outfit', sans-serif;
+      --radius: 18px;
+      --radius-sm: 10px;
+      --header-bg: rgba(8,11,18,0.95);
+      --tl-axis-color: #1e2535;
+      --tl-now-glow: rgba(245,95,75,0.35);
+      /* settings / forms */
+      --settings-panel-bg: #0f1320;
+      --overlay-bg: rgba(4,6,12,0.88);
+      --input-bg: rgba(255,255,255,0.04);
+      --input-bg-hover: rgba(255,255,255,0.07);
+      --s-item-bg: rgba(255,255,255,0.025);
+      --btn-secondary-bg: rgba(255,255,255,0.06);
+      --btn-small-bg: rgba(255,255,255,0.05);
+      --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7590' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    }
+    :root.light {
+      --bg: #eef0f4;
+      --tile-bg: #ffffff;
+      --tile-border: #d8dce6;
+      --tile-border-hover: #b4bccf;
+      --text-primary: #1a1d2e;
+      --text-secondary: #60687e;
+      --text-muted: #9aa0b4;
+      --accent-amber: #d4850a;
+      --accent-blue: #2f75e0;
+      --accent-green: #1aad6a;
+      --accent-red: #d9432f;
+      --accent-purple: #7c4fcf;
+      --header-bg: rgba(238,240,244,0.96);
+      --tl-axis-color: #d0d4e0;
+      --tl-now-glow: rgba(217,67,47,0.25);
+      /* settings / forms */
+      --settings-panel-bg: #ffffff;
+      --overlay-bg: rgba(180,185,200,0.80);
+      --input-bg: rgba(0,0,0,0.04);
+      --input-bg-hover: rgba(0,0,0,0.07);
+      --s-item-bg: rgba(0,0,0,0.03);
+      --btn-secondary-bg: rgba(0,0,0,0.05);
+      --btn-small-bg: rgba(0,0,0,0.04);
+      --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2360687e' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;overflow:hidden;}
+    body{
+      background:var(--bg);
+      color:var(--text-primary);
+      font-family:var(--font-sans);
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* ── HEADER ── */
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 20px 10px;
+      border-bottom:1px solid var(--tile-border);
+      flex-shrink:0;
+      background:var(--header-bg);
+      backdrop-filter:blur(12px);
+      position:sticky;top:0;z-index:10;
+      transition:background .3s, border-color .3s;
+    }
+    .header-left{display:flex;align-items:baseline;gap:16px;}
+    .clock{
+      font-family:var(--font-mono);
+      font-size:2.6rem;
+      font-weight:700;
+      color:var(--accent-amber);
+      letter-spacing:-1.5px;
+      line-height:1;
+    }
+    .date-display{
+      font-size:0.9rem;
+      color:var(--text-secondary);
+      font-weight:400;
+    }
+    .header-actions{display:flex;gap:8px;}
+    .btn-icon{
+      background:var(--tile-bg);
+      border:1px solid var(--tile-border);
+      color:var(--text-secondary);
+      width:38px;height:38px;
+      border-radius:10px;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      font-size:17px;
+      transition:all .2s;
+    }
+    .btn-icon:hover{color:var(--text-primary);border-color:var(--accent-blue);}
+    .btn-icon.spin{animation:spin 0.7s linear infinite;}
+
+    /* ── GRID ── */
+    .dashboard-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+      padding:14px;
+      flex:1;
+      min-height:0;
+      overflow:hidden;
+    }
+    .right-col{
+      display:grid;
+      grid-template-rows:1fr 2fr;
+      gap:14px;
+      min-height:0;
+    }
+    @media(max-width:900px){
+      html,body{overflow:auto;}
+      body{height:auto;}
+      .dashboard-grid{
+        grid-template-columns:1fr;
+        height:auto;
+        overflow:visible;
+        flex:none;
+      }
+      .right-col{grid-template-rows:auto auto;}
+    }
+
+    /* ── TILE ── */
+    .tile{
+      background:var(--tile-bg);
+      border:1px solid var(--tile-border);
+      border-radius:var(--radius);
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      overflow:hidden;
+      transition:border-color .3s, background .3s;
+    }
+    .tile:hover{border-color:var(--tile-border-hover);}
+    .tile-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
+      flex-shrink:0;
+    }
+    .tile-title{
+      font-size:0.7rem;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      color:var(--text-secondary);
+    }
+    .tile-body{
+      flex:1;
+      overflow-y:auto;
+      min-height:0;
+      scrollbar-width:thin;
+      scrollbar-color:var(--tile-border) transparent;
+    }
+    .tile-body::-webkit-scrollbar{width:3px;}
+    .tile-body::-webkit-scrollbar-thumb{background:var(--tile-border);border-radius:2px;}
+
+    /* ── CALENDAR HYBRID TIMELINE ── */
+    .cal-allday-strip{
+      flex-shrink:0;
+      padding-bottom:8px;
+      margin-bottom:8px;
+      border-bottom:1px solid var(--tile-border);
+    }
+    .cal-allday-label{
+      font-size:0.6rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.1em;color:var(--text-muted);margin-bottom:6px;
+    }
+    .cal-allday-pill{
+      display:inline-flex;align-items:center;gap:5px;
+      background:rgba(91,156,246,0.12);
+      border:1px solid rgba(91,156,246,0.25);
+      border-radius:20px;
+      padding:3px 10px 3px 6px;
+      font-size:0.75rem;
+      margin:2px 4px 2px 0;
+    }
+    .cal-allday-dot{
+      width:7px;height:7px;border-radius:50%;flex-shrink:0;
+    }
+
+    /* The main timeline area (always visible) */
+    .cal-tl-wrap{
+      display:flex;
+      flex:1;
+      min-height:0;
+      position:relative;
+      overflow:hidden;
+    }
+    /* Narrow left axis */
+    .cal-axis{
+      width:42px;
+      flex-shrink:0;
+      position:relative;
+      overflow:hidden;
+    }
+    /* Vertical axis line */
+    .cal-axis::after{
+      content:'';
+      position:absolute;
+      right:0;top:0;bottom:0;
+      width:1px;
+      background:var(--tl-axis-color);
+    }
+    .cal-axis-hour{
+      position:absolute;
+      right:7px;
+      transform:translateY(-50%);
+      font-family:var(--font-mono);
+      font-size:0.58rem;
+      color:var(--text-muted);
+      white-space:nowrap;
+      line-height:1;
+    }
+    /* Right events pane */
+    .cal-events-pane{
+      flex:1;
+      position:relative;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:thin;
+      scrollbar-color:var(--tile-border) transparent;
+    }
+    .cal-events-pane::-webkit-scrollbar{width:3px;}
+    .cal-events-pane::-webkit-scrollbar-thumb{background:var(--tile-border);border-radius:2px;}
+    /* Inner container, height set by JS */
+    .cal-events-inner{
+      position:relative;
+      width:100%;
+    }
+    /* Hour grid lines (behind events) */
+    .cal-grid-line{
+      position:absolute;
+      left:0;right:0;height:1px;
+      background:var(--tile-border);
+      opacity:0.5;
+      pointer-events:none;
+    }
+    /* An event block */
+    .cal-ev{
+      position:absolute;
+      left:14px;right:6px;
+      border-radius:8px;
+      padding:5px 9px;
+      overflow:hidden;
+      box-sizing:border-box;
+      cursor:default;
+      transition:filter .15s;
+    }
+    .cal-ev:hover{filter:brightness(1.1);}
+    .cal-ev-time{
+      font-family:var(--font-mono);
+      font-size:0.6rem;
+      opacity:0.85;
+      margin-bottom:1px;
+    }
+    .cal-ev-title{
+      font-size:0.76rem;
+      font-weight:600;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .cal-ev-loc{
+      font-size:0.65rem;
+      opacity:0.7;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      margin-top:1px;
+    }
+    /* Connector: horizontal tick from axis to event */
+    .cal-connector{
+      position:absolute;
+      left:-14px;
+      top:50%;
+      width:14px;
+      height:1px;
+      background:currentColor;
+      opacity:0.4;
+    }
+    /* "Now" line */
+    .cal-now-line{
+      position:absolute;
+      left:0;right:0;height:2px;
+      background:var(--accent-red);
+      z-index:4;
+      pointer-events:none;
+      box-shadow:0 0 6px var(--tl-now-glow);
+    }
+    .cal-now-dot{
+      position:absolute;
+      left:-5px;top:-4px;
+      width:10px;height:10px;
+      border-radius:50%;
+      background:var(--accent-red);
+      box-shadow:0 0 6px var(--tl-now-glow);
+    }
+    /* Sync scroll: axis tracks events pane */
+    .cal-axis-inner{
+      position:absolute;
+      top:0;left:0;right:0;
+    }
+
+    /* ── OLD CALENDAR STYLES (kept for all-day tags) ── */
+    .all-day-tag{
+      display:inline-block;font-size:0.62rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:0.08em;
+      background:rgba(91,156,246,0.18);color:var(--accent-blue);
+      padding:2px 7px;border-radius:5px;margin-bottom:4px;
+    }
+    .section-label{
+      font-size:0.65rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.1em;color:var(--text-muted);
+      margin-bottom:8px;margin-top:4px;
+    }
+    .hr-divider{height:1px;background:var(--tile-border);margin:10px 0 12px;}
+
+    /* ── TIMELINE ── */
+    .timeline-wrap{position:relative;padding-left:42px;}
+    .tl-axis{position:absolute;left:30px;top:0;bottom:0;width:1px;background:var(--tile-border);}
+    .tl-hour{
+      position:absolute;
+      left:0;right:0;
+      height:0;
+    }
+    .tl-hour-label{
+      position:absolute;
+      right:calc(100% - 26px);
+      font-family:var(--font-mono);
+      font-size:0.6rem;
+      color:var(--text-muted);
+      transform:translateY(-50%);
+      white-space:nowrap;
+    }
+    .tl-hour-line{
+      position:absolute;
+      left:0;right:0;
+      height:1px;
+      background:var(--tile-border);
+      opacity:0.5;
+    }
+    .tl-event{
+      position:absolute;
+      left:8px;right:0;
+      border-radius:7px;
+      padding:4px 9px;
+      font-size:0.72rem;
+      overflow:hidden;
+      cursor:default;
+      box-sizing:border-box;
+    }
+    .tl-event-title{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-weight:500;
+    }
+    .tl-event-time{
+      font-family:var(--font-mono);
+      font-size:0.6rem;
+      opacity:0.8;
+      margin-bottom:1px;
+    }
+    .tl-now-line{
+      position:absolute;
+      left:-2px;right:0;
+      height:2px;
+      background:var(--accent-red);
+      z-index:5;
+    }
+    .tl-now-dot{
+      position:absolute;
+      left:-5px;
+      top:-4px;
+      width:10px;height:10px;
+      border-radius:50%;
+      background:var(--accent-red);
+    }
+
+    /* ── BUS ── */
+    .stop-section{margin-bottom:18px;}
+    .stop-section:last-child{margin-bottom:0;}
+    .stop-header{
+      display:flex;align-items:center;gap:7px;margin-bottom:10px;
+    }
+    .stop-label{font-size:0.78rem;font-weight:600;color:var(--accent-blue);flex:1;}
+    .stop-number{
+      font-family:var(--font-mono);font-size:0.62rem;color:var(--text-muted);
+      background:rgba(128,128,128,0.1);padding:2px 6px;border-radius:5px;
+    }
+    .line-badge{
+      display:inline-flex;align-items:center;justify-content:center;
+      background:var(--accent-blue);color:#fff;
+      font-family:var(--font-mono);font-size:0.72rem;font-weight:700;
+      padding:3px 7px;border-radius:7px;min-width:34px;
+      flex-shrink:0;
+    }
+
+    /* ── Line filter pills ── */
+    .stop-filter-pills{display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
+    .filter-pill{
+      display:inline-flex;align-items:center;
+      font-family:var(--font-mono);font-size:0.62rem;font-weight:700;
+      background:var(--accent-blue);color:#fff;
+      padding:1px 7px;border-radius:20px;
+    }
+    /* Settings: filter edit row inside stop item */
+    .stop-filter-row{
+      display:flex;align-items:center;gap:6px;
+      padding-top:7px;
+      border-top:1px solid var(--tile-border);
+      margin-top:6px;
+    }
+    .stop-filter-label{font-size:0.68rem;color:var(--text-secondary);white-space:nowrap;}
+    .stop-filter-input{
+      flex:1;
+      background:var(--input-bg);border:1px solid var(--tile-border);
+      color:var(--text-primary);padding:4px 8px;
+      border-radius:7px;font-family:var(--font-sans);font-size:0.78rem;
+      outline:none;transition:border-color .2s;
+    }
+    .stop-filter-input:focus{border-color:var(--accent-blue);}
+    .stop-filter-input::placeholder{color:var(--text-muted);}
+    .stop-filter-save{
+      background:var(--accent-blue);color:#fff;border:none;
+      padding:4px 10px;border-radius:7px;font-size:0.72rem;
+      font-family:var(--font-sans);cursor:pointer;white-space:nowrap;
+      transition:opacity .2s;
+    }
+    .stop-filter-save:hover{opacity:0.85;}
+
+    /* Departure card */
+    .dep-card{
+      display:flex;align-items:flex-start;gap:10px;
+      padding:9px 0;
+      border-bottom:1px solid var(--tile-border);
+    }
+    .dep-card:last-of-type{border-bottom:none;}
+    .dep-body{flex:1;min-width:0;}
+    .dep-top{
+      display:flex;align-items:center;gap:6px;
+      margin-bottom:4px;
+    }
+    .dep-dir{
+      font-size:0.85rem;font-weight:500;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      flex:1;min-width:0;
+    }
+    .dep-plat{
+      font-family:var(--font-mono);font-size:0.6rem;
+      background:rgba(128,128,128,0.12);
+      color:var(--text-secondary);
+      padding:1px 5px;border-radius:4px;
+      flex-shrink:0;
+    }
+    .dep-eta{
+      font-family:var(--font-mono);font-size:0.78rem;
+      color:var(--text-primary);margin-bottom:2px;
+    }
+    .dep-eta .eta-soon{color:var(--accent-amber);font-weight:700;}
+    .dep-eta .eta-clock{color:var(--text-secondary);font-size:0.72rem;}
+    .dep-status{font-size:0.7rem;font-weight:600;}
+    .dep-status.ontime{color:var(--accent-green);}
+    .dep-status.late{color:var(--accent-red);}
+    .dep-status.early{color:var(--accent-blue);}
+
+    /* ── WEATHER – new side-by-side layout ── */
+    .w-main-row{
+      display:flex;gap:12px;flex:1;min-height:0;
+    }
+    .w-left{
+      display:flex;flex-direction:column;gap:8px;flex-shrink:0;min-width:0;
+    }
+    .w-current{display:flex;align-items:center;gap:10px;}
+    .w-icon{font-size:2.4rem;line-height:1;flex-shrink:0;}
+    .w-temp{
+      font-family:var(--font-mono);font-size:2rem;font-weight:700;
+      color:var(--accent-amber);line-height:1;
+    }
+    .w-desc{font-size:0.78rem;color:var(--text-secondary);margin-top:2px;}
+    .w-stats{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:5px;
+    }
+    .w-stat{
+      background:rgba(128,128,128,0.06);border:1px solid var(--tile-border);
+      border-radius:8px;padding:5px 7px;text-align:center;
+    }
+    .w-stat-label{font-size:0.58rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;}
+    .w-stat-value{font-family:var(--font-mono);font-size:0.82rem;font-weight:600;margin-top:1px;}
+    .w-hourly{
+      flex:1;min-width:0;
+      display:flex;gap:5px;
+      overflow-x:auto;overflow-y:hidden;
+      padding-bottom:2px;
+      scrollbar-width:thin;
+      scrollbar-color:var(--tile-border) transparent;
+      align-items:stretch;
+    }
+    .w-hourly::-webkit-scrollbar{height:3px;}
+    .w-hourly::-webkit-scrollbar-thumb{background:var(--tile-border);border-radius:2px;}
+    .w-hour{
+      flex-shrink:0;text-align:center;
+      background:rgba(128,128,128,0.06);border:1px solid var(--tile-border);
+      border-radius:9px;padding:7px 7px;min-width:44px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+    }
+    .w-hour-t{font-family:var(--font-mono);font-size:0.58rem;color:var(--text-muted);}
+    .w-hour-i{font-size:1.1rem;margin:3px 0;}
+    .w-hour-temp{font-family:var(--font-mono);font-size:0.72rem;font-weight:600;}
+    .w-hour-rain{font-size:0.55rem;color:var(--accent-blue);margin-top:1px;}
+
+    /* ── COLLAPSIBLE TILES ── */
+    .tile-collapse-btn{
+      background:none;border:none;
+      color:var(--text-muted);width:24px;height:24px;
+      border-radius:6px;cursor:pointer;font-size:11px;
+      display:flex;align-items:center;justify-content:center;
+      transition:color .2s, background .2s;flex-shrink:0;
+    }
+    .tile-collapse-btn:hover{color:var(--text-primary);background:rgba(128,128,128,0.12);}
+
+    /* ── Calendar collapsed → left sidebar ── */
+    .dashboard-grid.cal-collapsed{
+      grid-template-columns: 48px 1fr;
+    }
+    /* When both right tiles are collapsed → right col becomes narrow vertical strip;
+       when only right is collapsed, col is still 1fr */
+    .dashboard-grid.both-right-collapsed{
+      grid-template-columns: 1fr 48px;
+    }
+    /* Calendar tile collapsed: vertical sidebar */
+    #cal-tile.collapsed{
+      padding: 14px 0;
+      justify-content: flex-start;
+      align-items: center;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    #cal-tile.collapsed .tile-header{
+      flex-direction: column-reverse;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      margin-bottom: 0;
+      flex: 1;
+    }
+    /* Rotate the title text 90° */
+    #cal-tile.collapsed .tile-title{
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 0.65rem;
+      white-space: nowrap;
+      color: var(--text-secondary);
+    }
+    /* Keep badge and btn horizontal */
+    #cal-tile.collapsed .badge-updated{ display: none; }
+    #cal-tile.collapsed .tile-collapse-btn{ transform: none; }
+    #cal-tile.collapsed #cal-allday-strip,
+    #cal-tile.collapsed .cal-tl-wrap{ display: none; }
+
+    /* ── Right column row heights ── */
+    /* Normal */
+    #right-col{ grid-template-rows: 1fr 2fr; }
+    /* Weather collapsed */
+    #right-col.weather-collapsed{ grid-template-rows: 48px 1fr; }
+    /* Bus collapsed */
+    #right-col.bus-collapsed{ grid-template-rows: 1fr 48px; }
+    /* Both collapsed */
+    #right-col.weather-collapsed.bus-collapsed{ grid-template-rows: 48px 48px; }
+
+    /* ── Weather tile collapsed → horizontal strip ── */
+    #weather-tile.collapsed{
+      flex-direction: row;
+      align-items: center;
+      padding: 0 14px;
+      gap: 12px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    #weather-tile.collapsed .tile-header{
+      margin-bottom: 0;
+      flex-shrink: 0;
+      gap: 6px;
+    }
+    #weather-tile.collapsed .tile-header #weather-loc-label{ display: none; }
+
+    /* ── Bus tile collapsed → horizontal strip ── */
+    #bus-tile.collapsed{
+      flex-direction: row;
+      align-items: center;
+      padding: 0 14px;
+      gap: 12px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    #bus-tile.collapsed .tile-header{
+      margin-bottom: 0;
+      flex-shrink: 0;
+      gap: 6px;
+    }
+    #bus-tile.collapsed .tile-header #bus-updated{ display: none; }
+
+    /* Collapsed info areas */
+    .w-collapsed-info{
+      display: none;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .bus-collapsed-info{
+      display: none;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .bus-mini-dep{
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+    /* Vertical divider between mini-deps */
+    .bus-mini-sep{
+      width: 1px;
+      height: 16px;
+      background: var(--tile-border);
+      flex-shrink: 0;
+    }
+
+    /* When BOTH right tiles collapsed → move right-col to a vertical sidebar */
+    .dashboard-grid.both-right-collapsed #right-col{
+      grid-template-rows: 1fr 1fr;
+    }
+    .dashboard-grid.both-right-collapsed #weather-tile.collapsed,
+    .dashboard-grid.both-right-collapsed #bus-tile.collapsed{
+      flex-direction: column;
+      padding: 12px 0;
+      align-items: center;
+      gap: 8px;
+    }
+    .dashboard-grid.both-right-collapsed #weather-tile.collapsed .tile-header,
+    .dashboard-grid.both-right-collapsed #bus-tile.collapsed .tile-header{
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .dashboard-grid.both-right-collapsed #weather-tile.collapsed .tile-title,
+    .dashboard-grid.both-right-collapsed #bus-tile.collapsed .tile-title{
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 0.65rem;
+      white-space: nowrap;
+      color: var(--text-secondary);
+    }
+    .dashboard-grid.both-right-collapsed #weather-tile.collapsed .w-collapsed-info,
+    .dashboard-grid.both-right-collapsed #bus-tile.collapsed .bus-collapsed-info{
+      display: none; /* no room in vertical mode */
+    }
+    .dashboard-grid.both-right-collapsed #weather-tile.collapsed .tile-collapse-btn,
+    .dashboard-grid.both-right-collapsed #bus-tile.collapsed .tile-collapse-btn{
+      transform: none;
+    }
+
+    /* ── STATES ── */
+    .empty-state{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100%;
+      min-height:80px;
+      color:var(--text-muted);
+      font-size:0.85rem;
+      text-align:center;
+      line-height:1.7;
+    }
+    .loading{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px 16px;
+      color:var(--text-muted);
+      font-size:0.82rem;
+      gap:10px;
+    }
+    .spinner{
+      width:14px;height:14px;
+      border:2px solid var(--tile-border);
+      border-top-color:var(--accent-blue);
+      border-radius:50%;
+      animation:spin .7s linear infinite;
+    }
+    .error-inline{
+      font-size:0.75rem;
+      color:var(--accent-red);
+      background:rgba(245,95,75,0.1);
+      border:1px solid rgba(245,95,75,0.2);
+      border-radius:8px;
+      padding:8px 12px;
+      margin-bottom:6px;
+    }
+    .no-events{
+      text-align:center;
+      padding:28px 16px;
+      color:var(--text-muted);
+      font-size:0.85rem;
+    }
+
+    /* ── SETTINGS OVERLAY ── */
+    .settings-overlay{
+      position:fixed;
+      inset:0;
+      background:var(--overlay-bg);
+      backdrop-filter:blur(10px);
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s;
+    }
+    .settings-overlay.open{opacity:1;pointer-events:all;}
+    .settings-panel{
+      background:var(--settings-panel-bg);
+      border:1px solid var(--tile-border);
+      border-radius:22px;
+      width:min(700px,96vw);
+      max-height:88vh;
+      overflow-y:auto;
+      padding:28px;
+      scrollbar-width:thin;
+      scrollbar-color:var(--tile-border) transparent;
+      transition:background .3s, border-color .3s;
+    }
+    .settings-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:28px;
+    }
+    .settings-title{font-size:1.2rem;font-weight:700;}
+    .settings-section{margin-bottom:28px;}
+    .settings-section-title{
+      font-size:0.68rem;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      color:var(--accent-blue);
+      margin-bottom:12px;
+      padding-bottom:8px;
+      border-bottom:1px solid var(--tile-border);
+    }
+    .s-item{
+      background:var(--s-item-bg);
+      border:1px solid var(--tile-border);
+      border-radius:var(--radius-sm);
+      padding:11px 14px;
+      margin-bottom:7px;
+      display:flex;
+      align-items:center;
+      gap:11px;
+    }
+    .s-item-info{flex:1;min-width:0;}
+    .s-item-name{font-size:0.88rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .s-item-sub{font-size:0.72rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;}
+    .color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    .btn-rm{
+      background:none;
+      border:1px solid var(--tile-border);
+      color:var(--accent-red);
+      width:28px;height:28px;
+      border-radius:7px;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;
+      transition:all .2s;
+      flex-shrink:0;
+    }
+    .btn-rm:hover{background:rgba(245,95,75,0.12);}
+
+    /* Form elements */
+    .add-form{margin-top:14px;}
+    .input-group{margin-bottom:10px;}
+    .input-label{
+      display:block;
+      font-size:0.72rem;
+      color:var(--text-secondary);
+      margin-bottom:5px;
+      font-weight:500;
+    }
+    .input-field,.select-field{
+      width:100%;
+      background:var(--input-bg);
+      border:1px solid var(--tile-border);
+      color:var(--text-primary);
+      padding:9px 12px;
+      border-radius:9px;
+      font-family:var(--font-sans);
+      font-size:0.85rem;
+      outline:none;
+      transition:border-color .2s, background .2s;
+      -webkit-appearance:none;
+    }
+    .input-field:focus,.select-field:focus{border-color:var(--accent-blue);background:var(--input-bg-hover);}
+    .input-field::placeholder{color:var(--text-muted);}
+    .select-field{cursor:pointer;background-image:var(--select-arrow);background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+    select option{background:var(--settings-panel-bg);color:var(--text-primary);}
+
+    .btn-primary{
+      background:var(--accent-blue);
+      color:#fff;
+      border:none;
+      padding:9px 18px;
+      border-radius:9px;
+      font-family:var(--font-sans);
+      font-size:0.85rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:opacity .2s;
+    }
+    .btn-primary:hover{opacity:0.85;}
+    .btn-secondary{
+      background:var(--btn-secondary-bg);
+      color:var(--text-secondary);
+      border:1px solid var(--tile-border);
+      padding:9px 18px;
+      border-radius:9px;
+      font-family:var(--font-sans);
+      font-size:0.85rem;
+      cursor:pointer;
+      transition:all .2s;
+    }
+    .btn-secondary:hover{color:var(--text-primary);}
+    .btn-small{
+      background:var(--btn-small-bg);
+      border:1px solid var(--tile-border);
+      color:var(--text-secondary);
+      padding:5px 11px;
+      border-radius:7px;
+      font-family:var(--font-sans);
+      font-size:0.72rem;
+      cursor:pointer;
+      transition:all .2s;
+    }
+    .btn-small:hover{color:var(--text-primary);}
+
+    .err-msg{font-size:0.72rem;color:var(--accent-red);margin-top:5px;}
+    .ok-msg{font-size:0.72rem;color:var(--accent-green);margin-top:5px;}
+
+    .cal-type-tabs{display:flex;gap:5px;margin-bottom:12px;}
+    .cal-type-tab{
+      background:none;
+      border:1px solid var(--tile-border);
+      color:var(--text-secondary);
+      padding:5px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:0.78rem;
+      font-family:var(--font-sans);
+      transition:all .2s;
+    }
+    .cal-type-tab.active{background:var(--accent-blue);color:#fff;border-color:var(--accent-blue);}
+
+    .color-picker{display:flex;gap:8px;flex-wrap:wrap;padding:4px 0;}
+    .color-opt{
+      width:24px;height:24px;
+      border-radius:50%;
+      cursor:pointer;
+      border:2px solid transparent;
+      transition:transform .15s,border-color .15s;
+    }
+    .color-opt:hover{transform:scale(1.15);}
+    .color-opt.selected{border-color:#fff;transform:scale(1.1);}
+
+    .autocomplete-list{
+      background:var(--settings-panel-bg);
+      border:1px solid var(--tile-border);
+      border-radius:9px;
+      margin-top:4px;
+      max-height:180px;
+      overflow-y:auto;
+      scrollbar-width:thin;
+      transition:background .3s;
+    }
+    .ac-item{
+      padding:9px 12px;
+      cursor:pointer;
+      font-size:0.83rem;
+      border-bottom:1px solid var(--tile-border);
+      transition:background .15s;
+    }
+    .ac-item:last-child{border-bottom:none;}
+    .ac-item:hover{background:rgba(91,156,246,0.1);}
+    .ac-sub{font-size:0.7rem;color:var(--text-muted);}
+
+    .info-box{
+      background:rgba(91,156,246,0.07);
+      border:1px solid rgba(91,156,246,0.2);
+      border-radius:9px;
+      padding:10px 14px;
+      font-size:0.78rem;
+      color:var(--text-secondary);
+      line-height:1.6;
+      margin-bottom:12px;
+    }
+    .info-box a{color:var(--accent-blue);text-decoration:none;}
+
+    .settings-footer{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      padding-top:16px;
+      border-top:1px solid var(--tile-border);
+    }
+
+    .badge-updated{
+      font-family:var(--font-mono);
+      font-size:0.6rem;
+      color:var(--text-muted);
+    }
+
+    @keyframes spin{to{transform:rotate(360deg);}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+    .fade-in{animation:fadeIn .3s ease;}
+
+    /* ── BUS REFRESH PROGRESS ── */
+    .bus-progress-track{
+      height:2px;
+      background:var(--tile-border);
+      border-radius:1px;
+      margin-bottom:10px;
+      flex-shrink:0;
+      overflow:hidden;
+      position:relative;
+    }
+    .bus-progress-fill{
+      position:absolute;
+      left:0;top:0;bottom:0;
+      width:0%;
+      background:var(--accent-blue);
+      border-radius:1px;
+      opacity:0.7;
+    }
+    .bus-progress-fill.running{
+      animation:busProgress 15s linear forwards;
+    }
+    @keyframes busProgress{from{width:0%}to{width:100%}}
+
+    /* subtle flash when data refreshes */
+    @keyframes busFlash{
+      0%{opacity:1} 30%{opacity:0.5} 100%{opacity:1}
+    }
+    .bus-refresh-flash{animation:busFlash 0.4s ease;}
+
+    /* "load more" button inside bus tile */
+    .bus-more-btn{
+      width:100%;
+      background:rgba(255,255,255,0.04);
+      border:1px dashed var(--tile-border);
+      color:var(--text-secondary);
+      padding:7px 0;
+      border-radius:9px;
+      font-family:var(--font-sans);
+      font-size:0.78rem;
+      cursor:pointer;
+      margin-top:10px;
+      transition:all .2s;
+    }
+    .bus-more-btn:hover{
+      background:rgba(91,156,246,0.08);
+      border-color:var(--accent-blue);
+      color:var(--accent-blue);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="clock" id="clock">--:--</div>
+    <div class="date-display" id="date-display">…</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-icon" id="theme-btn" title="Hell / Dunkel" onclick="toggleTheme()">☀</button>
+    <button class="btn-icon" id="refresh-btn" title="Aktualisieren" onclick="refreshAll()">↻</button>
+    <button class="btn-icon" id="settings-btn" title="Einstellungen" onclick="openSettings()">⚙</button>
+  </div>
+</header>
+
+<div class="dashboard-grid" id="dashboard-grid">
+
+  <!-- Calendar – full height, left half -->
+  <section class="tile cal-tile" id="cal-tile" style="overflow:hidden">
+    <div class="tile-header">
+      <span class="tile-title">📅 Heute</span>
+      <span class="badge-updated" id="cal-updated"></span>
+      <button class="tile-collapse-btn" id="cal-collapse-btn" onclick="toggleTile('cal')" title="Ein-/Ausklappen">◀</button>
+    </div>
+    <div id="cal-allday-strip"></div>
+    <div class="cal-tl-wrap" id="cal-tl-wrap">
+      <div class="cal-axis" id="cal-axis">
+        <div class="cal-axis-inner" id="cal-axis-inner"></div>
+      </div>
+      <div class="cal-events-pane" id="cal-events-pane">
+        <div class="cal-events-inner" id="cal-events-inner">
+          <div class="empty-state" id="cal-placeholder">Keine Kalender konfiguriert.<br>Öffne die Einstellungen ⚙</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right column: Weather (top) + Bus (bottom) -->
+  <div class="right-col" id="right-col">
+
+    <!-- Weather -->
+    <section class="tile weather-tile" id="weather-tile">
+      <div class="tile-header">
+        <span class="tile-title">🌤 Wetter</span>
+        <span style="font-size:0.72rem;color:var(--text-secondary)" id="weather-loc-label"></span>
+        <button class="tile-collapse-btn" id="weather-collapse-btn" onclick="toggleTile('weather')" title="Ein-/Ausklappen">▲</button>
+      </div>
+      <div class="w-collapsed-info" id="w-collapsed-info"></div>
+      <div class="tile-body" id="weather-body">
+        <div class="empty-state">Kein Ort konfiguriert.<br>Öffne die Einstellungen ⚙</div>
+      </div>
+    </section>
+
+    <!-- Bus -->
+    <section class="tile bus-tile" id="bus-tile">
+      <div class="tile-header">
+        <span class="tile-title">🚌 Abfahrten</span>
+        <span class="badge-updated" id="bus-updated"></span>
+        <button class="tile-collapse-btn" id="bus-collapse-btn" onclick="toggleTile('bus')" title="Ein-/Ausklappen">▼</button>
+      </div>
+      <div class="bus-progress-track"><div class="bus-progress-fill" id="bus-progress"></div></div>
+      <div class="bus-collapsed-info" id="bus-collapsed-info"></div>
+      <div class="tile-body" id="bus-body">
+        <div class="empty-state">Keine Haltestellen konfiguriert.<br>Öffne die Einstellungen ⚙</div>
+      </div>
+    </section>
+
+  </div><!-- /right-col -->
+
+</div>
+
+<!-- Settings Modal -->
+<div class="settings-overlay" id="settings-overlay" onclick="overlayClick(event)">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <div class="settings-title">⚙ Einstellungen</div>
+      <button class="btn-icon" onclick="closeSettings()">✕</button>
+    </div>
+
+    <!-- Calendars -->
+    <div class="settings-section">
+      <div class="settings-section-title">📅 Kalender</div>
+      <div id="s-cals"></div>
+      <div class="cal-type-tabs">
+        <button class="cal-type-tab active" id="tab-ics" onclick="setCalType('ics')">ICS / iCal URL</button>
+        <button class="cal-type-tab" id="tab-caldav" onclick="setCalType('caldav')">CalDAV</button>
+      </div>
+      <div class="add-form">
+        <div class="input-group">
+          <label class="input-label">Name</label>
+          <input class="input-field" id="cal-name" type="text" placeholder="z.B. Arbeit">
+        </div>
+        <div class="input-group">
+          <label class="input-label" id="cal-url-label">iCal-URL</label>
+          <input class="input-field" id="cal-url" type="url" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics">
+        </div>
+        <div id="caldav-extra" style="display:none">
+          <div class="info-box">
+            <b>💡 Empfehlung:</b> Nutze statt CalDAV eine direkte <b>ICS/iCal-Export-URL</b> — diese funktioniert zuverlässiger ohne Proxy-Abhängigkeit.<br>
+            • <b>Nextcloud:</b> Kalender → ⋮ → Link kopieren → endet auf <code>.ics</code><br>
+            • <b>Google:</b> Kalendereinstellungen → "Privater Kalender-Link" (iCal)<br>
+            • <b>iCloud:</b> Kalender teilen → privater Link (<code>webcal://</code> → <code>https://</code>)<br><br>
+            <b>CalDAV</b> (PROPFIND/REPORT) wird cross-origin blockiert und benötigt einen CORS-Proxy. Wir probieren automatisch mehrere Proxies — klappt es nicht, wechsle auf ICS.
+          </div>
+          <div class="input-group">
+            <label class="input-label">Benutzername</label>
+            <input class="input-field" id="cal-user" type="text" autocomplete="off" placeholder="Benutzername">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Passwort / App-Passwort</label>
+            <input class="input-field" id="cal-pass" type="password" autocomplete="new-password" placeholder="••••••••">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Farbe</label>
+          <div class="color-picker" id="cal-color-picker"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-primary" onclick="addCalendar()">+ Kalender hinzufügen</button>
+        </div>
+        <div class="err-msg" id="cal-err"></div>
+      </div>
+    </div>
+
+    <!-- Bus Stops -->
+    <div class="settings-section">
+      <div class="settings-section-title">🚌 Haltestellen (SWU Ulm)</div>
+      <div id="s-stops"></div>
+      <div class="add-form">
+        <div class="input-group">
+          <label class="input-label">Haltestelle suchen</label>
+          <input class="input-field" id="stop-search" type="text" placeholder="Name eingeben…" oninput="debouncedStopSearch(this.value)" autocomplete="off">
+          <div class="autocomplete-list" id="stop-ac" style="display:none"></div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Linien-Filter <span style="color:var(--text-muted);font-weight:400">(optional – leer = alle Linien)</span></label>
+          <input class="input-field" id="stop-lines" type="text" placeholder="z.B.  5, 1, 3" autocomplete="off">
+        </div>
+        <div id="stop-manual-wrap" style="display:none">
+          <div class="hr-divider"></div>
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:10px">Oder direkt per Haltestellen-Nr. (4-stellig):</div>
+          <div style="display:flex;gap:8px">
+            <input class="input-field" id="stop-num" type="text" maxlength="4" pattern="\d{4}" placeholder="1234" style="max-width:90px">
+            <input class="input-field" id="stop-name-m" type="text" placeholder="Anzeigename">
+            <button class="btn-primary" onclick="addStopManual()">+</button>
+          </div>
+        </div>
+        <button class="btn-small" style="margin-top:8px" onclick="toggleManualStop()">📋 Nummer direkt eingeben</button>
+        <div class="err-msg" id="stop-err"></div>
+      </div>
+    </div>
+
+    <!-- Weather -->
+    <div class="settings-section">
+      <div class="settings-section-title">🌤 Wetter-Ort</div>
+      <div class="input-group">
+        <label class="input-label">Stadt / Ort</label>
+        <input class="input-field" id="w-loc-input" type="text" placeholder="z.B. Ulm" oninput="debouncedWeatherSearch(this.value)" autocomplete="off">
+        <div class="autocomplete-list" id="w-ac" style="display:none"></div>
+        <div id="w-selected" style="font-size:0.76rem;color:var(--accent-green);margin-top:5px"></div>
+      </div>
+    </div>
+
+    <div class="settings-footer">
+      <button class="btn-secondary" onclick="closeSettings()">Abbrechen</button>
+      <button class="btn-primary" onclick="saveAndClose()">Speichern & Schließen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// CONSTANTS
+// ================================================================
+const PROXY = 'https://corsproxy.io/?url=';
+const SWU = 'https://api.swu.de/mobility/v1';
+const CAL_COLORS = ['#5b9cf6','#f5a623','#3dd68c','#f55f4b','#b47cf6','#06c0c0','#fb7185','#a3e635','#fbbf24','#60a5fa'];
+
+const WMO = {
+  0:['☀️','Klar'], 1:['🌤️','Überwiegend klar'], 2:['⛅','Teils bewölkt'], 3:['☁️','Bedeckt'],
+  45:['🌫️','Nebel'], 48:['🌫️','Gefrierender Nebel'],
+  51:['🌦️','Nieselregen'], 53:['🌦️','Nieselregen'], 55:['🌦️','Starker Nieselregen'],
+  56:['🌧️','Gefrierender Nieselregen'], 57:['🌧️','Starker gefr. Nieselregen'],
+  61:['🌧️','Leichter Regen'], 63:['🌧️','Regen'], 65:['🌧️','Starker Regen'],
+  66:['🌨️','Gefrierender Regen'], 67:['🌨️','Starker gefr. Regen'],
+  71:['❄️','Leichter Schnee'], 73:['❄️','Schnee'], 75:['❄️','Starker Schnee'], 77:['🌨️','Schneegriesel'],
+  80:['🌦️','Leichte Schauer'], 81:['🌦️','Schauer'], 82:['⛈️','Starke Schauer'],
+  85:['🌨️','Schneeschauer'], 86:['🌨️','Starke Schneeschauer'],
+  95:['⛈️','Gewitter'], 96:['⛈️','Gewitter + Hagel'], 99:['⛈️','Starkes Gewitter + Hagel']
+};
+
+const DAYS_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+// ================================================================
+// STATE
+// ================================================================
+let settings = loadSettings();
+let calViewMode = 'list';
+let calEvents = [];
+let currentCalType = 'ics';
+let selectedColor = CAL_COLORS[0];
+let allStopsCache = null;
+let stopSearchTimer = null;
+let weatherTimer = null;
+let stopSearchResults = [];
+let weatherLocResults = [];
+
+// ================================================================
+// STORAGE
+// ================================================================
+function loadSettings() {
+  try {
+    return JSON.parse(localStorage.getItem('morgen_v2')) || getDefaultSettings();
+  } catch { return getDefaultSettings(); }
+}
+function getDefaultSettings() {
+  return { calendars:[], busStops:[], weather:{ location:'', lat:null, lon:null } };
+}
+function saveSettings() {
+  localStorage.setItem('morgen_v2', JSON.stringify(settings));
+}
+
+// ================================================================
+// CLOCK
+// ================================================================
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = hh + ':' + mm;
+  document.getElementById('date-display').textContent =
+    DAYS_DE[now.getDay()] + ', ' + now.getDate() + '. ' + MONTHS_DE[now.getMonth()] + ' ' + now.getFullYear();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Auto-refresh every 5 minutes
+setInterval(refreshAll, 5 * 60 * 1000);
+
+// ================================================================
+// HELPERS
+// ================================================================
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtTime(d) {
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+function todayYMD() {
+  const n = new Date();
+  return [n.getFullYear(), n.getMonth(), n.getDate()];
+}
+function isSameDay(d, y, m, day) {
+  return d.getFullYear()===y && d.getMonth()===m && d.getDate()===day;
+}
+const PROXIES = [
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
+
+async function fetchWithProxy(url, opts={}) {
+  // 1. Try direct (works if the server allows CORS or same-origin)
+  try {
+    const r = await fetch(url, {...opts, signal: AbortSignal.timeout(7000)});
+    if (r.ok) return r;
+  } catch {}
+  // 2. Try each CORS proxy in sequence
+  for (const makeProxy of PROXIES) {
+    try {
+      const r = await fetch(makeProxy(url), {...opts, signal: AbortSignal.timeout(10000)});
+      if (r.ok) return r;
+    } catch {}
+  }
+  throw new Error('Kein Proxy erreichbar — bitte ICS-URL statt CalDAV verwenden');
+}
+
+// ================================================================
+// ICS PARSER
+// ================================================================
+function parseICS(raw) {
+  const events = [];
+  // Unfold continuation lines
+  const text = raw.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'');
+  const lines = text.split(/\r\n|\n/);
+  let ev = null;
+  for (const line of lines) {
+    if (line === 'BEGIN:VEVENT') { ev = {}; continue; }
+    if (line === 'END:VEVENT') { if (ev && ev.SUMMARY) events.push(ev); ev=null; continue; }
+    if (!ev) continue;
+    const ci = line.indexOf(':');
+    if (ci<0) continue;
+    const fullKey = line.substring(0,ci);
+    const val = line.substring(ci+1).trim();
+    const key = fullKey.split(';')[0].toUpperCase();
+    const params = fullKey.toUpperCase();
+    if (key==='DTSTART'||key==='DTEND') {
+      const allDay = params.includes('VALUE=DATE') && !params.includes('DATE-TIME');
+      ev[key] = allDay ? {date:parseDate(val), allDay:true} : {date:parseDateTime(val, params), allDay:false};
+    } else {
+      ev[key] = unesc(val);
+    }
+  }
+  return events;
+}
+function parseDate(s) {
+  return new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8));
+}
+function parseDateTime(s, params) {
+  s = s.trim();
+  const y=+s.slice(0,4), mo=+s.slice(4,6)-1, d=+s.slice(6,8);
+  const h=+s.slice(9,11), mi=+s.slice(11,13), sec=+s.slice(13,15)||0;
+  return s.endsWith('Z') ? new Date(Date.UTC(y,mo,d,h,mi,sec)) : new Date(y,mo,d,h,mi,sec);
+}
+function unesc(s) {
+  return s.replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
+}
+function filterToday(events) {
+  const [ty,tm,td] = todayYMD();
+  const todayMs = new Date(ty,tm,td).getTime();
+  const tomorrowMs = todayMs + 86400000;
+  return events.filter(e => {
+    const s = e.DTSTART?.date; if(!s) return false;
+    const en = e.DTEND?.date;
+    if (e.DTSTART.allDay) {
+      const sd = new Date(s.getFullYear(),s.getMonth(),s.getDate()).getTime();
+      const ed = en ? new Date(en.getFullYear(),en.getMonth(),en.getDate()).getTime() : sd+86400000;
+      return sd < tomorrowMs && ed > todayMs;
+    } else {
+      const sd = s.getTime();
+      const ed = en ? en.getTime() : sd;
+      return sd < tomorrowMs && ed >= todayMs;
+    }
+  }).sort((a,b) => {
+    if (a.DTSTART.allDay && !b.DTSTART.allDay) return -1;
+    if (!a.DTSTART.allDay && b.DTSTART.allDay) return 1;
+    return a.DTSTART.date - b.DTSTART.date;
+  });
+}
+
+// ================================================================
+// CALENDAR FETCHER
+// ================================================================
+async function fetchCalendar(cal) {
+  if (cal.type === 'ics') {
+    const r = await fetchWithProxy(cal.url);
+    const text = await r.text();
+    return filterToday(parseICS(text));
+  } else {
+    return fetchCalDAV(cal);
+  }
+}
+async function fetchCalDAV(cal) {
+  const [ty,tm,td] = todayYMD();
+  const pad = n => String(n).padStart(2,'0');
+  const d0 = `${ty}${pad(tm+1)}${pad(td)}T000000Z`;
+  const d1 = `${ty}${pad(tm+1)}${pad(td+1)}T000000Z`;
+  const body = `<?xml version="1.0" encoding="utf-8"?>\n<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav"><D:prop><D:getetag/><C:calendar-data/></D:prop><C:filter><C:comp-filter name="VCALENDAR"><C:comp-filter name="VEVENT"><C:time-range start="${d0}" end="${d1}"/></C:comp-filter></C:comp-filter></C:filter></C:calendar-query>`;
+  const headers = {'Content-Type':'application/xml','Depth':'1'};
+  if (cal.username && cal.password) headers['Authorization'] = 'Basic ' + btoa(unescape(encodeURIComponent(cal.username+':'+cal.password)));
+  let text = '';
+  try {
+    const r = await fetch(PROXY + encodeURIComponent(cal.url), {method:'REPORT', headers, body, signal:AbortSignal.timeout(12000)});
+    text = await r.text();
+  } catch {
+    // Fallback: try GET → might return full .ics
+    const r = await fetch(PROXY + encodeURIComponent(cal.url), {headers, signal:AbortSignal.timeout(12000)});
+    text = await r.text();
+    if (text.includes('BEGIN:VCALENDAR')) return filterToday(parseICS(text));
+    throw new Error('CalDAV nicht erreichbar');
+  }
+  // Parse multi-response XML
+  if (text.includes('BEGIN:VCALENDAR')) {
+    // might be inline ics
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text,'application/xml');
+    const nodes = doc.getElementsByTagNameNS('urn:ietf:params:xml:ns:caldav','calendar-data');
+    if (nodes.length) {
+      let all = [];
+      for (const n of nodes) all = all.concat(parseICS(n.textContent));
+      return filterToday(all);
+    }
+    return filterToday(parseICS(text));
+  }
+  throw new Error('Unerwartetes CalDAV-Format');
+}
+
+// ================================================================
+// BUS / SWU
+// ================================================================
+function parseDeps(data) {
+  if (!data) return [];
+  // SWU actual structure: { StopPassage: { DepartureData: [...] } }
+  let arr = null;
+  if (data.StopPassage?.DepartureData) {
+    arr = data.StopPassage.DepartureData;
+  } else if (Array.isArray(data)) {
+    arr = data;
+  } else {
+    // generic fallback for any array in response
+    for (const k of Object.keys(data)) {
+      if (Array.isArray(data[k]) && data[k].length > 0) { arr = data[k]; break; }
+    }
+  }
+  if (!arr || !arr.length) return [];
+  const now = Date.now();
+  return arr.map(d => {
+    // SWU fields (exact):
+    const line    = d.RouteName ?? d.RouteNumber ?? '?';
+    const dir     = d.DepartureDirectionText ?? '?';
+    const platform= d.PlatformName ?? '';
+    const planned = d.DepartureTimeScheduled ? new Date(d.DepartureTimeScheduled) : null;
+    const actual  = d.DepartureTimeActual    ? new Date(d.DepartureTimeActual)    : null;
+    // DepartureDeviation is in seconds
+    const delaySec = Number(d.DepartureDeviation ?? 0);
+    const delayMin = Math.round(delaySec / 60);
+    // DepartureCountdown is seconds until departure (for display)
+    const countdown = d.DepartureCountdown != null ? Number(d.DepartureCountdown) : null;
+    const display   = actual || planned;
+    return { line: String(line), dir: String(dir), platform, planned, actual, display, delayMin, countdown };
+  }).filter(d => d.display && d.display.getTime() > now - 90000)
+    .sort((a, b) => a.display - b.display);
+}
+
+async function loadAllStops() {
+  if (allStopsCache) return allStopsCache;
+  // Try minimal first (faster), fall back to basic if minimal returns no names
+  const url = `${SWU}/stop/attributes/BaseData?ContentScope=basic`;
+  try {
+    const r = await fetchWithProxy(url);
+    const data = await r.json();
+    // Exact SWU structure: { StopAttributes: { StopData: [...] } }
+    let arr = data?.StopAttributes?.StopData ?? null;
+    if (!arr) {
+      // Generic fallback
+      for (const k of Object.keys(data)) {
+        const v = data[k];
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          for (const k2 of Object.keys(v)) {
+            if (Array.isArray(v[k2]) && v[k2].length > 0) { arr = v[k2]; break; }
+          }
+        }
+        if (arr) break;
+      }
+    }
+    allStopsCache = arr || [];
+    return allStopsCache;
+  } catch { return []; }
+}
+
+// ================================================================
+// WEATHER / OPEN-METEO
+// ================================================================
+async function fetchWeather(lat, lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,precipitation_probability_max&hourly=temperature_2m,weathercode,precipitation_probability&current_weather=true&timezone=Europe%2FBerlin&forecast_days=1`;
+  const r = await fetch(url, {signal:AbortSignal.timeout(8000)});
+  if (!r.ok) throw new Error('Wetter-API: HTTP '+r.status);
+  return r.json();
+}
+async function geocode(name) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=8&language=de&format=json`;
+  const r = await fetch(url, {signal:AbortSignal.timeout(6000)});
+  return r.json();
+}
+
+// ================================================================
+// THEME
+// ================================================================
+let isLight = localStorage.getItem('morgen_theme') === 'light';
+function applyTheme() {
+  document.documentElement.classList.toggle('light', isLight);
+  document.getElementById('theme-btn').textContent = isLight ? '🌙' : '☀';
+}
+function toggleTheme() {
+  isLight = !isLight;
+  localStorage.setItem('morgen_theme', isLight ? 'light' : 'dark');
+  applyTheme();
+}
+applyTheme();
+
+// ================================================================
+// RENDER – CALENDAR (hybrid timeline always visible)
+// ================================================================
+const TL_START = 6;   // 06:00
+const TL_END   = 23;  // 23:00
+const PX_PER_H = 54;  // pixels per hour
+
+async function loadCalendar() {
+  const inner = document.getElementById('cal-events-inner');
+  const axisInner = document.getElementById('cal-axis-inner');
+
+  if (!settings.calendars?.length) {
+    document.getElementById('cal-allday-strip').innerHTML = '';
+    axisInner.innerHTML = '';
+    inner.innerHTML = '<div class="empty-state">Keine Kalender konfiguriert.<br>Öffne die Einstellungen ⚙</div>';
+    return;
+  }
+
+  // Show loading skeleton while fetching
+  inner.innerHTML = '<div class="loading"><div class="spinner"></div>Lade Kalender…</div>';
+
+  let all = [], errs = [];
+  for (const cal of settings.calendars) {
+    try {
+      const evs = await fetchCalendar(cal);
+      evs.forEach(e => { e._color = cal.color; e._calName = cal.name; });
+      all = all.concat(evs);
+    } catch(ex) {
+      errs.push(cal.name + ': ' + (ex.message || 'Verbindungsfehler'));
+    }
+  }
+  calEvents = all.sort((a,b) => {
+    if (a.DTSTART.allDay && !b.DTSTART.allDay) return -1;
+    if (!a.DTSTART.allDay && b.DTSTART.allDay) return 1;
+    return a.DTSTART.date - b.DTSTART.date;
+  });
+  document.getElementById('cal-updated').textContent = fmtTime(new Date());
+  renderCalendar(errs);
+}
+
+function renderCalendar(errs=[]) {
+  renderCalAllDay();
+  renderCalTimeline(errs);
+  syncCalAxisScroll();
+}
+
+function renderCalAllDay() {
+  const strip = document.getElementById('cal-allday-strip');
+  const allDay = calEvents.filter(e => e.DTSTART.allDay);
+  if (!allDay.length) { strip.innerHTML=''; return; }
+  let h = '<div class="cal-allday-strip"><div class="cal-allday-label">Ganztägig</div>';
+  h += allDay.map(e => {
+    const c = e._color || 'var(--accent-blue)';
+    return '<span class="cal-allday-pill" style="color:'+c+';border-color:'+c+'40">'
+      + '<span class="cal-allday-dot" style="background:'+c+'"></span>'
+      + esc(e.SUMMARY||'Termin') + '</span>';
+  }).join('');
+  h += '</div>';
+  strip.innerHTML = h;
+}
+
+function renderCalTimeline(errs=[]) {
+  const totalPx = (TL_END - TL_START) * PX_PER_H;
+  const inner = document.getElementById('cal-events-inner');
+  const axisInner = document.getElementById('cal-axis-inner');
+
+  // Build axis HTML
+  let axisH = '';
+  for (let hr = TL_START; hr <= TL_END; hr++) {
+    const top = (hr - TL_START) * PX_PER_H;
+    axisH += '<div class="cal-axis-hour" style="top:' + top + 'px">'
+      + String(hr).padStart(2,'0') + '</div>';
+  }
+  axisInner.style.height = totalPx + 'px';
+  axisInner.innerHTML = axisH;
+
+  // Build events HTML
+  let html = '';
+
+  // Error boxes
+  if (errs.length) {
+    html += errs.map(e => '<div class="error-inline" style="margin-bottom:6px">⚠ '+esc(e)+'</div>').join('');
+  }
+
+  // No events
+  if (!calEvents.filter(e => !e.DTSTART.allDay).length && !errs.length) {
+    if (!calEvents.length) {
+      html += '<div class="no-events" style="padding-top:40px">🎉 Keine Termine heute</div>';
+      inner.style.height = totalPx + 'px';
+      inner.innerHTML = html;
+      return;
+    }
+  }
+
+  // Hour grid lines
+  for (let hr = TL_START; hr <= TL_END; hr++) {
+    const top = (hr - TL_START) * PX_PER_H;
+    html += '<div class="cal-grid-line" style="top:' + top + 'px"></div>';
+  }
+
+  // Timed events
+  const timed = calEvents.filter(e => !e.DTSTART.allDay);
+
+  // Detect overlaps and assign columns
+  const cols = assignColumns(timed);
+
+  for (let i = 0; i < timed.length; i++) {
+    const e = timed[i];
+    const {col, totalCols} = cols[i];
+    const s = e.DTSTART.date;
+    const en = e.DTEND?.date || new Date(s.getTime() + 3600000);
+    const sf = s.getHours() + s.getMinutes()/60;
+    const ef = en.getHours() + en.getMinutes()/60;
+    const top = Math.max(0, (sf - TL_START) * PX_PER_H);
+    const ht  = Math.max(28, (ef - sf) * PX_PER_H - 3);
+    const c   = e._color || 'var(--accent-blue)';
+    // horizontal offset for overlap columns
+    const colW = totalCols > 1 ? (100 / totalCols) : 100;
+    const leftPct = col * colW;
+    const loc = e.LOCATION ? '<div class="cal-ev-loc">📍 '+esc(e.LOCATION)+'</div>' : '';
+    const desc = (ht > 52 && e.DESCRIPTION)
+      ? '<div class="cal-ev-loc">'+esc(e.DESCRIPTION.split('\n')[0].substring(0,50))+'</div>' : '';
+    html += '<div class="cal-ev" style="top:'+top+'px;height:'+ht+'px;'
+      + 'left:calc(14px + '+leftPct+'%);'
+      + 'right:calc('+(100 - leftPct - colW)+'% + 6px);'
+      + 'background:'+c+'22;border-left:3px solid '+c+';color:'+c+'">'
+      + '<div class="cal-connector" style="color:'+c+'"></div>'
+      + '<div class="cal-ev-time">'+fmtTime(s)+(ht>36?'–'+fmtTime(en):'')+'</div>'
+      + '<div class="cal-ev-title" style="color:var(--text-primary)">'+esc(e.SUMMARY||'Termin')+'</div>'
+      + loc + desc
+      + '</div>';
+  }
+
+  // "Now" indicator
+  const now = new Date();
+  const nf = now.getHours() + now.getMinutes()/60;
+  if (nf >= TL_START && nf <= TL_END) {
+    const ntop = (nf - TL_START) * PX_PER_H;
+    html += '<div class="cal-now-line" style="top:'+ntop+'px">'
+      + '<div class="cal-now-dot"></div></div>';
+  }
+
+  inner.style.height = totalPx + 'px';
+  inner.innerHTML = html;
+
+  // Auto-scroll to current time minus 1.5 hours
+  const scrollTarget = Math.max(0, (nf - TL_START - 1.5) * PX_PER_H);
+  requestAnimationFrame(() => {
+    document.getElementById('cal-events-pane').scrollTop = scrollTarget;
+  });
+}
+
+// Keep axis in sync with events pane scroll
+function syncCalAxisScroll() {
+  const pane = document.getElementById('cal-events-pane');
+  const axisInner = document.getElementById('cal-axis-inner');
+  pane.addEventListener('scroll', () => {
+    axisInner.style.transform = 'translateY(-' + pane.scrollTop + 'px)';
+  }, {passive:true});
+}
+
+// Assign non-overlapping columns to simultaneous events
+function assignColumns(events) {
+  const result = events.map(() => ({col:0, totalCols:1}));
+  for (let i=0; i<events.length; i++) {
+    const s1 = events[i].DTSTART.date.getTime();
+    const e1 = (events[i].DTEND?.date || new Date(s1+3600000)).getTime();
+    const overlapping = [i];
+    for (let j=0; j<events.length; j++) {
+      if (i===j) continue;
+      const s2 = events[j].DTSTART.date.getTime();
+      const e2 = (events[j].DTEND?.date || new Date(s2+3600000)).getTime();
+      if (s1 < e2 && e1 > s2) overlapping.push(j);
+    }
+    const n = overlapping.length;
+    overlapping.sort((a,b)=>a-b).forEach((idx,pos) => {
+      result[idx].col = pos;
+      result[idx].totalCols = n;
+    });
+  }
+  return result;
+}
+
+// Legacy stub (no longer used, kept for safety)
+function setCalView() {}
+function renderCalendarContent() {}
+
+// ================================================================
+// RENDER – BUS  (15-second auto-refresh, Page Visibility aware)
+// ================================================================
+const BUS_INITIAL   = 6;    // departures shown initially per stop
+const BUS_MORE_STEP = 6;    // added per "Mehr" click
+const BUS_FETCH_LIM = 20;   // fetched from API upfront
+const BUS_INTERVAL  = 15000;// ms between refreshes
+
+let busAllDeps   = {};  // stopId → dep[]  (full fetched list)
+let busShowCount = {};  // stopId → number  (currently visible)
+let busRefreshId = null;
+
+// ── Progress bar ──────────────────────────────────────────────
+function resetBusProgress() {
+  const el = document.getElementById('bus-progress');
+  if (!el) return;
+  // Restart CSS animation by cloning
+  el.classList.remove('running');
+  void el.offsetWidth; // force reflow
+  el.classList.add('running');
+}
+
+// ── Visibility-aware interval ─────────────────────────────────
+function startBusInterval() {
+  if (busRefreshId) clearInterval(busRefreshId);
+  busRefreshId = setInterval(() => {
+    if (document.visibilityState === 'visible') loadBusSilent();
+  }, BUS_INTERVAL);
+}
+function stopBusInterval() {
+  if (busRefreshId) clearInterval(busRefreshId);
+  busRefreshId = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // Resume: refresh immediately then restart interval
+    loadBusSilent();
+    startBusInterval();
+  } else {
+    // App hidden: pause interval to save resources
+    stopBusInterval();
+  }
+});
+
+// ── Full load (shows spinner, called on init / manual refresh) ─
+async function loadBus() {
+  const body = document.getElementById('bus-body');
+  if (!settings.busStops.length) {
+    body.innerHTML = '<div class="empty-state">Keine Haltestellen konfiguriert.<br>Öffne die Einstellungen ⚙</div>';
+    stopBusInterval();
+    return;
+  }
+  body.innerHTML = '<div class="loading"><div class="spinner"></div>Lade Abfahrten…</div>';
+  await _fetchAllBusData();
+  renderBusBody(false);
+  resetBusProgress();
+  startBusInterval();
+}
+
+// ── Silent background refresh (no spinner, just updates data) ──
+async function loadBusSilent() {
+  if (!settings.busStops.length) return;
+  await _fetchAllBusData();
+  renderBusBody(true); // flash = true
+  resetBusProgress();
+}
+
+// ── Shared fetch logic ─────────────────────────────────────────
+async function _fetchAllBusData() {
+  for (const stop of settings.busStops) {
+    try {
+      const url = `${SWU}/stop/passage/Departures?StopNumber=${stop.stopNumber}&Limit=${BUS_FETCH_LIM}`;
+      const r = await fetchWithProxy(url);
+      const data = await r.json();
+      busAllDeps[stop.id] = parseDeps(data);
+      // Preserve current showCount, default to initial
+      if (!busShowCount[stop.id]) busShowCount[stop.id] = BUS_INITIAL;
+    } catch(ex) {
+      busAllDeps[stop.id] = { error: ex.message };
+    }
+  }
+  document.getElementById('bus-updated').textContent = fmtTime(new Date());
+}
+
+// ── Render from cached busAllDeps ─────────────────────────────
+function renderBusBody(flash=false) {
+  const body = document.getElementById('bus-body');
+  if (!settings.busStops.length) return;
+
+  let html = '';
+  let collapsedParts = []; // for collapsed strip
+
+  for (const stop of settings.busStops) {
+    const raw = busAllDeps[stop.id];
+    const activeLines = (stop.lines || []).map(l => String(l).trim()).filter(Boolean);
+    const filterPillsHtml = activeLines.length
+      ? ' <span class="stop-filter-pills">' + activeLines.map(l => '<span class="filter-pill">'+esc(l)+'</span>').join('') + '</span>'
+      : '';
+    html += '<div class="stop-section">';
+    html += '<div class="stop-header">'
+      + '<div class="stop-label">🚏 ' + esc(stop.name) + filterPillsHtml + '</div>'
+      + '<div class="stop-number">#' + esc(stop.stopNumber) + '</div>'
+      + '</div>';
+
+    if (!raw) {
+      html += '<div style="color:var(--text-muted);font-size:0.78rem;padding:4px 0 8px">Noch nicht geladen…</div>';
+    } else if (raw.error) {
+      html += '<div class="error-inline">⚠ ' + esc(raw.error) + '</div>';
+    } else {
+      const filtered = activeLines.length
+        ? raw.filter(d => activeLines.includes(String(d.line)))
+        : raw;
+
+      if (!filtered.length) {
+        html += '<div style="color:var(--text-muted);font-size:0.78rem;padding:4px 0 8px">'
+          + (activeLines.length ? 'Keine Abfahrten für Linie ' + activeLines.join(', ')
+                                : 'Keine Abfahrten in Kürze')
+          + '</div>';
+      } else {
+        // ── Group by direction ──────────────────────────────
+        const groups = new Map();
+        for (const d of filtered) {
+          if (!groups.has(d.dir)) groups.set(d.dir, []);
+          groups.get(d.dir).push(d);
+        }
+
+        for (const [dir, deps] of groups) {
+          const first = deps[0];
+          const rest  = deps.slice(1, 5); // up to 4 more times
+          const ts    = first.display ? fmtTime(first.display) : '?';
+          let cdSec   = first.countdown != null ? first.countdown
+                        : Math.round((first.display - Date.now()) / 1000);
+          const cdMin = Math.round(cdSec / 60);
+          let etaHtml;
+          if (cdSec <= 30) {
+            etaHtml = '<span class="eta-soon">jetzt</span>'
+              + ' <span class="eta-clock">('+ts+')</span>';
+          } else {
+            etaHtml = 'in '
+              + (cdMin <= 1 ? '<span class="eta-soon">~1 Min</span>' : '~'+cdMin+' Min')
+              + ' <span class="eta-clock">('+ts+')</span>';
+          }
+          let statusHtml, statusClass;
+          if (first.delayMin > 1)       { statusClass='late';   statusHtml='+'+first.delayMin+' Min Verspätung'; }
+          else if (first.delayMin < -1) { statusClass='early';  statusHtml=Math.abs(first.delayMin)+' Min früher'; }
+          else                           { statusClass='ontime'; statusHtml='✓ Pünktlich'; }
+          const platHtml = first.platform
+            ? ' <span class="dep-plat">Steig '+esc(first.platform)+'</span>' : '';
+
+          // "Weitere" compact row
+          let weitereHtml = '';
+          if (rest.length) {
+            const weitereItems = rest.map(d => {
+              const t = d.display ? fmtTime(d.display) : '?';
+              const del = d.delayMin > 1 ? '<span style="color:var(--accent-red)">+'+d.delayMin+"'</span>"
+                        : d.delayMin < -1 ? '<span style="color:var(--accent-blue)">'+d.delayMin+"'</span>"
+                        : '<span style="color:var(--accent-green)">+0\'</span>';
+              return t + '\u202f' + del;
+            }).join('<span style="color:var(--text-muted)"> · </span>');
+            weitereHtml = '<div style="font-size:0.7rem;color:var(--text-secondary);margin-top:4px;padding-top:4px;border-top:1px solid var(--tile-border)">'
+              + 'Weitere: ' + weitereItems + '</div>';
+          }
+
+          html += '<div class="dep-card">'
+            + '<div class="line-badge">'+esc(first.line)+'</div>'
+            + '<div class="dep-body">'
+            +   '<div class="dep-top"><div class="dep-dir">'+esc(dir)+'</div>'+platHtml+'</div>'
+            +   '<div class="dep-eta">'+etaHtml+'</div>'
+            +   '<div class="dep-status '+statusClass+'">'+statusHtml+'</div>'
+            +   weitereHtml
+            + '</div>'
+            + '</div>';
+
+          // Collect for collapsed strip
+          if (collapsedParts.length < 4) {
+            collapsedParts.push(
+              '<div class="bus-mini-dep">'
+              + '<span class="line-badge" style="font-size:0.6rem;padding:1px 5px;min-width:24px">'+esc(first.line)+'</span>'
+              + '<span style="font-size:0.7rem;color:var(--text-secondary)">'+esc(dir.split(' ')[0])+'</span>'
+              + '<span style="font-family:var(--font-mono);font-size:0.75rem">'+ts+'</span>'
+              + (first.delayMin > 1 ? '<span style="color:var(--accent-red);font-size:0.65rem">+'+first.delayMin+"'</span>" : '')
+              + '</div>'
+            );
+          }
+        }
+      }
+    }
+    html += '</div>'; // stop-section
+  }
+
+  body.innerHTML = html;
+  // Update collapsed info strip
+  document.getElementById('bus-collapsed-info').innerHTML = collapsedParts.join(
+    '<div class="bus-mini-sep"></div>'
+  );
+  if (flash) body.classList.add('bus-refresh-flash');
+  body.addEventListener('animationend', () => body.classList.remove('bus-refresh-flash'), {once:true});
+}
+
+// ── Show more for a specific stop ─────────────────────────────
+function showMoreBus(stopId) {
+  busShowCount[stopId] = (busShowCount[stopId] || BUS_INITIAL) + BUS_MORE_STEP;
+  renderBusBody(false);
+}
+
+// ================================================================
+// RENDER – WEATHER
+// ================================================================
+async function loadWeather() {
+  const body = document.getElementById('weather-body');
+  const label = document.getElementById('weather-loc-label');
+  if (!settings.weather.lat) {
+    body.innerHTML = '<div class="empty-state">Kein Ort konfiguriert.<br>Öffne die Einstellungen ⚙</div>';
+    return;
+  }
+  body.innerHTML = '<div class="loading"><div class="spinner"></div>Lade Wetter…</div>';
+  label.textContent = settings.weather.location;
+  try {
+    const data = await fetchWeather(settings.weather.lat, settings.weather.lon);
+    renderWeather(data);
+  } catch(ex) {
+    body.innerHTML = `<div class="error-inline">⚠ Wetter nicht abrufbar: ${esc(ex.message)}</div>`;
+  }
+}
+
+function renderWeather(data) {
+  const body = document.getElementById('weather-body');
+  const cw = data.current_weather;
+  const d  = data.daily;
+  const h  = data.hourly;
+  const [icon, desc] = WMO[cw.weathercode] || ['🌡️','Unbekannt'];
+  const tmax = Math.round(d?.temperature_2m_max?.[0] ?? cw.temperature);
+  const tmin = Math.round(d?.temperature_2m_min?.[0] ?? cw.temperature);
+  const prec = (d?.precipitation_sum?.[0] ?? 0).toFixed(1);
+  const wind = Math.round(d?.windspeed_10m_max?.[0] ?? cw.windspeed);
+  const precipProb = d?.precipitation_probability_max?.[0] ?? 0;
+  const windDir = cw.winddirection !== undefined ? degToDir(cw.winddirection) : '';
+  const tempNow = Math.round(cw.temperature);
+
+  // Hourly cards (from now, up to 14 slots)
+  const nowH = new Date().getHours();
+  let hourlyHtml = '';
+  if (h?.time) {
+    let cnt = 0;
+    for (let i = 0; i < h.time.length && cnt < 14; i++) {
+      const t = new Date(h.time[i]);
+      if (t.getHours() < nowH) continue;
+      const [hi] = WMO[h.weathercode?.[i]] || ['🌡️'];
+      const rp   = h.precipitation_probability?.[i] ?? 0;
+      const temp = Math.round(h.temperature_2m?.[i] ?? 0);
+      hourlyHtml += '<div class="w-hour">'
+        + '<div class="w-hour-t">' + String(t.getHours()).padStart(2,'0') + ':00</div>'
+        + '<div class="w-hour-i">' + hi + '</div>'
+        + '<div class="w-hour-temp">' + temp + '°</div>'
+        + (rp > 15 ? '<div class="w-hour-rain">💧' + rp + '%</div>' : '')
+        + '</div>';
+      cnt++;
+    }
+  }
+
+  // Update collapsed info strip
+  document.getElementById('w-collapsed-info').innerHTML =
+    '<span style="font-size:1.5rem">' + icon + '</span>'
+    + '<span style="font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--accent-amber)">' + tempNow + '°C</span>'
+    + '<span style="font-size:0.75rem;color:var(--text-secondary)">' + esc(desc) + '</span>';
+
+  body.innerHTML =
+    '<div class="w-main-row">'
+    + '<div class="w-left">'
+    +   '<div class="w-current">'
+    +     '<div class="w-icon">' + icon + '</div>'
+    +     '<div>'
+    +       '<div class="w-temp">' + tempNow + '°C</div>'
+    +       '<div class="w-desc">' + esc(desc) + '</div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="w-stats">'
+    +     '<div class="w-stat"><div class="w-stat-label">Max/Min</div><div class="w-stat-value">' + tmax + '°/' + tmin + '°</div></div>'
+    +     '<div class="w-stat"><div class="w-stat-label">Wind</div><div class="w-stat-value">' + wind + '<span style="font-size:0.65rem"> km/h ' + windDir + '</span></div></div>'
+    +     '<div class="w-stat"><div class="w-stat-label">Regen</div><div class="w-stat-value">' + (+prec > 0 ? prec + ' mm' : precipProb + '%') + '</div></div>'
+    +   '</div>'
+    + '</div>'
+    + (hourlyHtml ? '<div class="w-hourly">' + hourlyHtml + '</div>' : '')
+    + '</div>';
+
+  body.classList.add('fade-in');
+}
+
+function degToDir(deg) {
+  const dirs = ['N','NO','O','SO','S','SW','W','NW'];
+  return dirs[Math.round(deg/45)%8];
+}
+
+// ================================================================
+// SETTINGS
+// ================================================================
+function openSettings() {
+  renderSCals(); renderSStops(); syncWeatherInput();
+  initColorPicker();
+  document.getElementById('settings-overlay').classList.add('open');
+}
+function closeSettings() {
+  // Always save on close — whether via ✕, Abbrechen, or Speichern
+  saveSettings();
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+function overlayClick(e) {
+  if (e.target === document.getElementById('settings-overlay')) saveAndClose();
+}
+function saveAndClose() {
+  saveSettings();
+  closeSettings();
+  // Reset bus show counts if stops changed
+  busShowCount = {};
+  busAllDeps   = {};
+  refreshAll();
+}
+
+// Calendars
+function renderSCals() {
+  const el = document.getElementById('s-cals');
+  if (!settings.calendars.length) { el.innerHTML = ''; return; }
+  el.innerHTML = settings.calendars.map(c => `<div class="s-item">
+    <div class="color-dot" style="background:${c.color}"></div>
+    <div class="s-item-info">
+      <div class="s-item-name">${esc(c.name)}</div>
+      <div class="s-item-sub">${c.type==='caldav'?'🔐 CalDAV':'📅 ICS'} · ${esc(c.url)}</div>
+    </div>
+    <button class="btn-rm" onclick="removeCal('${c.id}')">✕</button>
+  </div>`).join('');
+}
+function removeCal(id) {
+  settings.calendars = settings.calendars.filter(c=>c.id!==id);
+  saveSettings();
+  renderSCals();
+}
+
+function addCalendar() {
+  const name = document.getElementById('cal-name').value.trim();
+  const url = document.getElementById('cal-url').value.trim();
+  const user = document.getElementById('cal-user').value.trim();
+  const pass = document.getElementById('cal-pass').value;
+  const err = document.getElementById('cal-err');
+  if (!name) { err.textContent='Name eingeben'; return; }
+  if (!url) { err.textContent='URL eingeben'; return; }
+  err.textContent='';
+  settings.calendars.push({ id: Date.now().toString(), type:currentCalType, name, url, color:selectedColor,
+    ...(user ? {username:user} : {}), ...(pass ? {password:pass} : {}) });
+  saveSettings();
+  ['cal-name','cal-url','cal-user','cal-pass'].forEach(id => document.getElementById(id).value='');
+  const idx = CAL_COLORS.indexOf(selectedColor);
+  selectedColor = CAL_COLORS[(idx+1)%CAL_COLORS.length];
+  initColorPicker();
+  renderSCals();
+}
+function setCalType(t) {
+  currentCalType = t;
+  document.getElementById('tab-ics').classList.toggle('active', t==='ics');
+  document.getElementById('tab-caldav').classList.toggle('active', t==='caldav');
+  document.getElementById('caldav-extra').style.display = t==='caldav' ? 'block' : 'none';
+  document.getElementById('cal-url-label').textContent = t==='ics' ? 'iCal-URL' : 'CalDAV-Kalender-URL';
+  document.getElementById('cal-url').placeholder = t==='ics'
+    ? 'https://calendar.google.com/calendar/ical/…/basic.ics'
+    : 'https://nextcloud.example.com/remote.php/dav/calendars/user/kalender/';
+}
+function initColorPicker() {
+  document.getElementById('cal-color-picker').innerHTML = CAL_COLORS.map(c =>
+    `<div class="color-opt${c===selectedColor?' selected':''}" style="background:${c}" onclick="pickColor('${c}')"></div>`
+  ).join('');
+}
+function pickColor(c) { selectedColor=c; initColorPicker(); }
+
+// Bus stops
+function renderSStops() {
+  const el = document.getElementById('s-stops');
+  if (!settings.busStops.length) { el.innerHTML=''; return; }
+  el.innerHTML = settings.busStops.map(s => {
+    const lines = s.lines || [];
+    const filterLabel = lines.length
+      ? lines.map(l => '<span class="filter-pill">'+esc(l)+'</span>').join('')
+      : '<span style="font-size:0.68rem;color:var(--text-muted)">Alle Linien</span>';
+    return '<div class="s-item" style="flex-direction:column;align-items:stretch">'
+      // ── Top row: icon / name / sub / remove ──
+      + '<div style="display:flex;align-items:center;gap:11px">'
+      +   '<div class="s-item-info">'
+      +     '<div class="s-item-name">🚏 '+esc(s.name)+'</div>'
+      +     '<div class="s-item-sub">Nr. '+esc(s.stopNumber)
+      +       ' · <span class="stop-filter-pills">'+filterLabel+'</span>'
+      +     '</div>'
+      +   '</div>'
+      +   '<button class="btn-rm" onclick="removeStop(\''+s.id+'\')">✕</button>'
+      + '</div>'
+      // ── Inline filter editor (always visible) ──
+      + '<div class="stop-filter-row">'
+      +   '<span class="stop-filter-label">Linien-Filter:</span>'
+      +   '<input class="stop-filter-input" id="sfl-'+s.id+'" value="'+esc(lines.join(', '))+'" placeholder="leer = alle  ·  z.B.  5, 1">'
+      +   '<button class="stop-filter-save" onclick="saveStopFilter(\''+s.id+'\')">✓</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+function removeStop(id) {
+  settings.busStops = settings.busStops.filter(s=>s.id!==id);
+  saveSettings();
+  renderSStops();
+}
+function debouncedStopSearch(q) {
+  clearTimeout(stopSearchTimer);
+  stopSearchTimer = setTimeout(()=>doStopSearch(q), 450);
+}
+async function doStopSearch(q) {
+  const ac = document.getElementById('stop-ac');
+  if (!q || q.length < 2) { ac.style.display='none'; return; }
+  ac.innerHTML = '<div class="ac-item" style="color:var(--text-muted)">Suche…</div>';
+  ac.style.display = 'block';
+  const stops = await loadAllStops();
+  if (!stops.length) {
+    ac.innerHTML = '<div class="ac-item" style="color:var(--accent-red)">API nicht erreichbar – bitte Nummer direkt eingeben</div>';
+    document.getElementById('stop-manual-wrap').style.display = 'block';
+    return;
+  }
+  const ql = q.toLowerCase();
+  const hits = stops.filter(s => {
+    const n = (s.StopName ?? '').toLowerCase();
+    return n.includes(ql);
+  }).slice(0, 12);
+  if (!hits.length) {
+    ac.innerHTML = '<div class="ac-item" style="color:var(--text-muted)">Keine Treffer — direkte Eingabe der Nr. möglich</div>';
+    document.getElementById('stop-manual-wrap').style.display = 'block';
+    return;
+  }
+  stopSearchResults = hits;
+  ac.innerHTML = hits.map((s, i) => {
+    const name = s.StopName ?? '?';
+    const num  = s.StopNumber ?? '?';
+    return '<div class="ac-item" onclick="selectStop(' + i + ')">'
+      + esc(name)
+      + ' <span class="ac-sub">#' + esc(String(num)) + '</span>'
+      + '</div>';
+  }).join('');
+}
+function selectStop(i) {
+  const s = stopSearchResults[i]; if(!s) return;
+  const name  = s.StopName ?? '?';
+  const num   = String(s.StopNumber ?? '');
+  const lines = parseLinesInput(document.getElementById('stop-lines')?.value || '');
+  settings.busStops.push({ id:Date.now().toString(), stopNumber:num, name, lines });
+  saveSettings();
+  document.getElementById('stop-search').value='';
+  document.getElementById('stop-lines').value='';
+  document.getElementById('stop-ac').style.display='none';
+  document.getElementById('stop-err').textContent='';
+  renderSStops();
+}
+function toggleManualStop() {
+  const w = document.getElementById('stop-manual-wrap');
+  w.style.display = w.style.display==='none' ? 'block' : 'none';
+}
+function addStopManual() {
+  const num  = document.getElementById('stop-num').value.trim();
+  const name = document.getElementById('stop-name-m').value.trim();
+  const err  = document.getElementById('stop-err');
+  if (!/^\d{4}$/.test(num)) { err.textContent='4-stellige Nummer eingeben'; return; }
+  if (!name) { err.textContent='Name eingeben'; return; }
+  err.textContent='';
+  const lines = parseLinesInput(document.getElementById('stop-lines')?.value || '');
+  settings.busStops.push({id:Date.now().toString(), stopNumber:num, name, lines});
+  saveSettings();
+  document.getElementById('stop-num').value='';
+  document.getElementById('stop-name-m').value='';
+  document.getElementById('stop-lines').value='';
+  renderSStops();
+}
+function parseLinesInput(raw) {
+  return raw.split(',').map(s => s.trim()).filter(Boolean);
+}
+function saveStopFilter(id) {
+  const raw   = document.getElementById('sfl-'+id)?.value || '';
+  const lines = parseLinesInput(raw);
+  const stop  = settings.busStops.find(s => s.id === id);
+  if (stop) { stop.lines = lines; saveSettings(); renderSStops(); }
+}
+
+// Weather location
+function syncWeatherInput() {
+  document.getElementById('w-loc-input').value = settings.weather.location||'';
+  if (settings.weather.lat) {
+    document.getElementById('w-selected').textContent = `✓ ${settings.weather.location} (${(+settings.weather.lat).toFixed(2)}°, ${(+settings.weather.lon).toFixed(2)}°)`;
+  } else {
+    document.getElementById('w-selected').textContent = '';
+  }
+}
+function debouncedWeatherSearch(q) {
+  clearTimeout(weatherTimer);
+  weatherTimer = setTimeout(()=>doWeatherSearch(q), 450);
+}
+async function doWeatherSearch(q) {
+  const ac = document.getElementById('w-ac');
+  if (!q||q.length<2) { ac.style.display='none'; return; }
+  try {
+    const data = await geocode(q);
+    const results = data.results||[];
+    if (!results.length) { ac.innerHTML='<div class="ac-item" style="color:var(--text-muted)">Keine Treffer</div>'; ac.style.display='block'; return; }
+    weatherLocResults = results;
+    ac.innerHTML = results.map((r,i) => `<div class="ac-item" onclick="selectWeatherLoc(${i})">
+      ${esc(r.name)}${r.admin1?', '+esc(r.admin1):''} <span class="ac-sub">${esc(r.country_code||'')}</span>
+    </div>`).join('');
+    ac.style.display='block';
+  } catch { ac.style.display='none'; }
+}
+function selectWeatherLoc(i) {
+  const r = weatherLocResults[i]; if(!r) return;
+  settings.weather = {
+    location: r.name + (r.admin1?', '+r.admin1:''),
+    lat: r.latitude, lon: r.longitude
+  };
+  saveSettings();
+  document.getElementById('w-loc-input').value = settings.weather.location;
+  document.getElementById('w-ac').style.display='none';
+  document.getElementById('w-selected').textContent = `✓ ${settings.weather.location} (${r.latitude.toFixed(2)}°, ${r.longitude.toFixed(2)}°)`;
+}
+
+// ================================================================
+// TILE COLLAPSE
+// ================================================================
+const COLLAPSE_KEY = 'morgen_collapse';
+let collapseState = JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}');
+
+function applyCollapseAll() {
+  applyCollapse('cal');
+  applyCollapse('weather');
+  applyCollapse('bus');
+}
+
+function applyCollapse(name) {
+  const collapsed  = !!collapseState[name];
+  const calTile    = document.getElementById('cal-tile');
+  const wTile      = document.getElementById('weather-tile');
+  const busTile    = document.getElementById('bus-tile');
+  const grid       = document.getElementById('dashboard-grid');
+  const rightCol   = document.getElementById('right-col');
+
+  const wBody   = document.getElementById('weather-body');
+  const wInfo   = document.getElementById('w-collapsed-info');
+  const busBody = document.getElementById('bus-body');
+  const busInfo = document.getElementById('bus-collapsed-info');
+  const busProg = document.getElementById('bus-tile')?.querySelector('.bus-progress-track');
+
+  const calCollapsed     = !!collapseState.cal;
+  const weatherCollapsed = !!collapseState.weather;
+  const busCollapsed     = !!collapseState.bus;
+  const bothRight        = weatherCollapsed && busCollapsed;
+
+  // ── Calendar ─────────────────────────────────────────
+  calTile.classList.toggle('collapsed', calCollapsed);
+  grid.classList.toggle('cal-collapsed', calCollapsed && !bothRight);
+  const calBtn = document.getElementById('cal-collapse-btn');
+  if (calBtn) calBtn.textContent = calCollapsed ? '▶' : '◀';
+
+  // ── Weather ───────────────────────────────────────────
+  wTile.classList.toggle('collapsed', weatherCollapsed);
+  rightCol.classList.toggle('weather-collapsed', weatherCollapsed);
+  const wBtn = document.getElementById('weather-collapse-btn');
+  if (wBtn) wBtn.textContent = weatherCollapsed ? '▼' : '▲';
+  if (wBody) wBody.style.display  = weatherCollapsed ? 'none' : '';
+  if (wInfo) wInfo.style.display  = weatherCollapsed && !bothRight ? 'flex' : 'none';
+
+  // ── Bus ───────────────────────────────────────────────
+  busTile.classList.toggle('collapsed', busCollapsed);
+  rightCol.classList.toggle('bus-collapsed', busCollapsed);
+  const busBtn = document.getElementById('bus-collapse-btn');
+  if (busBtn) busBtn.textContent = busCollapsed ? '▲' : '▼';
+  if (busBody) busBody.style.display  = busCollapsed ? 'none' : '';
+  if (busInfo) busInfo.style.display  = busCollapsed && !bothRight ? 'flex' : 'none';
+  if (busProg) busProg.style.display  = busCollapsed ? 'none' : '';
+
+  // ── Both-right-collapsed: vertical right sidebar ──────
+  grid.classList.toggle('both-right-collapsed', bothRight);
+  // When both are collapsed, the grid becomes cal-full + right-sidebar
+  // Override the cal-collapsed grid col if needed
+  if (bothRight) {
+    // Calendar gets full width on left, right sidebar is narrow
+    grid.style.gridTemplateColumns = calCollapsed ? '48px 1fr 48px' : '1fr 48px';
+  } else {
+    grid.style.gridTemplateColumns = '';
+  }
+}
+
+function toggleTile(name) {
+  collapseState[name] = !collapseState[name];
+  localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapseState));
+  applyCollapse(name);
+}
+
+// ================================================================
+async function refreshAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spin');
+  // Reset bus state so we start fresh on manual refresh
+  busShowCount = {};
+  busAllDeps   = {};
+  await Promise.allSettled([loadCalendar(), loadBus(), loadWeather()]);
+  btn.classList.remove('spin');
+}
+
+// Calendar + weather: 5-minute cycle, only when visible
+// (Bus has its own 15-second interval managed by loadBus)
+setInterval(() => {
+  if (document.visibilityState === 'visible') {
+    loadCalendar();
+    loadWeather();
+  }
+}, 5 * 60 * 1000);
+
+// ================================================================
+// PWA SETUP
+// ================================================================
+(function setupPWA() {
+  const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
+    + '<rect width="512" height="512" rx="100" fill="#0d1119"/>'
+    // sun disc (clipped at horizon)
+    + '<clipPath id="h"><rect x="0" y="0" width="512" height="330"/></clipPath>'
+    + '<circle cx="256" cy="310" r="90" fill="#f5a623" clip-path="url(#h)"/>'
+    // horizon bar
+    + '<rect x="72" y="340" width="368" height="14" rx="7" fill="#f5a623" opacity="0.55"/>'
+    // rays (top, upper-left, upper-right, left, right)
+    + '<rect x="248" y="105" width="16" height="58" rx="8" fill="#f5a623"/>'
+    + '<rect x="140" y="138" width="16" height="58" rx="8" fill="#f5a623" transform="rotate(-45 148 167)"/>'
+    + '<rect x="356" y="138" width="16" height="58" rx="8" fill="#f5a623" transform="rotate(45 364 167)"/>'
+    + '<rect x="90" y="253" width="58" height="16" rx="8" fill="#f5a623"/>'
+    + '<rect x="364" y="253" width="58" height="16" rx="8" fill="#f5a623"/>'
+    + '</svg>';
+  const iconUrl = 'data:image/svg+xml;base64,' + btoa(svgIcon);
+
+  // Apple touch icon
+  const li = document.createElement('link');
+  li.rel='apple-touch-icon'; li.href=iconUrl;
+  document.head.appendChild(li);
+
+  // Manifest
+  const manifest = {
+    name:'Morgen Dashboard', short_name:'Morgen',
+    description:'Kalender, Bus & Wetter auf einen Blick',
+    display:'standalone', orientation:'landscape',
+    start_url:'./', scope:'./',
+    background_color:'#080b12', theme_color:'#080b12',
+    icons:[
+      {src:iconUrl, sizes:'192x192', type:'image/svg+xml'},
+      {src:iconUrl, sizes:'512x512', type:'image/svg+xml', purpose:'any maskable'}
+    ]
+  };
+  const mBlob = new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  document.getElementById('manifest-link').href = URL.createObjectURL(mBlob);
+
+  // Service Worker — uses the page's own URL as the SW script
+  // (blob: URL SWs can't intercept https: fetches; we cache the page via the Cache API instead)
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    // Try to register a real SW if one exists at the same path
+    navigator.serviceWorker.register(location.pathname + '?sw=1').catch(() => {
+      // Fallback: pre-cache this page using the Cache API directly
+      // so subsequent loads can be served from cache even when offline
+      caches.open('morgen-v1').then(cache => {
+        cache.add(location.href).catch(() => {});
+        // Also cache fonts
+        ['https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap']
+          .forEach(u => fetch(u).then(r => cache.put(u, r)).catch(() => {}));
+      });
+    });
+  }
+  // If loaded as SW scope (query param trick won't work without server config,
+  // but the cache pre-fill above gives partial offline support)
+})();
+
+// ================================================================
+// START
+// ================================================================
+// Restore collapse states before first render
+applyCollapseAll();
+// Initial data load
+refreshAll();
+</script>
+</body>
+</html>
